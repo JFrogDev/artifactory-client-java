@@ -17,6 +17,7 @@ public class AqlQueryBuilder {
     private AqlRootElement root = new AqlRootElement();
     private AqlItem sort;
     private AqlInclude include;
+    private int limit;
 
     public AqlQueryBuilder item(AqlItem item) {
         root.putAll(item.value());
@@ -83,13 +84,28 @@ public class AqlQueryBuilder {
         return this;
     }
 
+    public AqlQueryBuilder limit(int limit) {
+        if (limit > 0) {
+            this.limit = limit;
+        }
+        return this;
+    }
+
     public String build() {
         try {
             ObjectMapper mapper = new ObjectMapper();
-            return "items.find(" + getRootAsString(mapper) + ")" + getIncludeAsString() + getSortAsString(mapper);
+            return "items.find(" + getRootAsString(mapper) + ")" + getIncludeAsString() + getSortAsString(mapper) + getLimitAsString();
         } catch (JsonProcessingException e) {
             throw new AqlBuilderException("Error serializing object to json: ", e);
         }
+    }
+
+    private String getLimitAsString() {
+        return hasLimit() ? ".limit(" + limit + ")" : "";
+    }
+
+    private boolean hasLimit() {
+        return limit > 0;
     }
 
     private String getSortAsString(ObjectMapper mapper) throws JsonProcessingException {
