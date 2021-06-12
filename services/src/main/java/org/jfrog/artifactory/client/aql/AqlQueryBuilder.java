@@ -17,6 +17,7 @@ public class AqlQueryBuilder {
     private AqlRootElement root = new AqlRootElement();
     private AqlItem sort;
     private AqlInclude include;
+    private boolean isTransitive = false;
 
     public AqlQueryBuilder item(AqlItem item) {
         root.putAll(item.value());
@@ -83,10 +84,20 @@ public class AqlQueryBuilder {
         return this;
     }
 
+    public AqlQueryBuilder transitive() {
+        this.isTransitive = true;
+        return this;
+    }
+
     public String build() {
         try {
             ObjectMapper mapper = new ObjectMapper();
-            return "items.find(" + getRootAsString(mapper) + ")" + getIncludeAsString() + getSortAsString(mapper);
+            String aql = "items.find(" + getRootAsString(mapper) + ")" + getIncludeAsString()
+                + getSortAsString(mapper);
+            if (this.isTransitive) {
+                aql += ".transitive()";
+            }
+            return aql;
         } catch (JsonProcessingException e) {
             throw new AqlBuilderException("Error serializing object to json: ", e);
         }
